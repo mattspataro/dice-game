@@ -4,5 +4,8 @@
   "private": true,
   "workspaces": [
     "server"
-  ]
+  ],
+  "devDependencies": {
+    "tsconfig-paths": "^4.2.0"
+  }
 }

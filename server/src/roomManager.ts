@@ -111,6 +111,27 @@ export function getRoom(code: string): Room | undefined {
   return rooms.get(code);
 }
 
+/** Persist an updated room returned by the game engine */
+export function setRoom(room: Room): void {
+  rooms.set(room.code, room);
+}
+
+/** Mark a player connected or disconnected */
+export function updatePlayerConnection(
+  code: string,
+  socketId: string,
+  connected: boolean
+): Room | null {
+  const room = rooms.get(code);
+  if (!room) return null;
+  const player = room.players.find((p) => p.id === socketId);
+  if (player) {
+    player.isConnected = connected;
+    player.lastSeen = Date.now();
+  }
+  return room;
+}
+
 /** Clears all rooms — for use in tests only */
 export function _clearRooms(): void {
   rooms.clear();
