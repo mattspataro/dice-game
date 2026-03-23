@@ -23,6 +23,8 @@ export default function GameScreen() {
   const canRoll = isMyTurn && !isRolling && room.status === 'active' && (me?.isIn ?? false)
   const canGoOut = goOutWindowOpen && (me?.isIn ?? false) && !isRolling && !isMyTurn
   const isKill = room.lastRoll === KILL_NUMBER
+  const lastEvent = room.rollHistory[room.rollHistory.length - 1]
+  const seed = lastEvent?.seed ?? 0
 
   const isFinished = room.status === 'finished'
   const winner = isFinished
@@ -62,7 +64,7 @@ export default function GameScreen() {
 
       {/* Die */}
       <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 py-4">
-        <Die value={room.lastRoll} isRolling={isRolling} isKill={isKill} />
+        <Die value={room.lastRoll} isRolling={isRolling} isKill={isKill} seed={seed} />
 
         {/* Turn indicator */}
         {!isFinished && (
