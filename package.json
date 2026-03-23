@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "server"
+    "server",
+    "client"
   ],
   "devDependencies": {
     "tsconfig-paths": "^4.2.0"
