@@ -3,9 +3,10 @@ import { useGameStore } from '../store/gameStore'
 
 interface GoOutButtonProps {
   canGoOut: boolean
+  onGoOut?: () => void
 }
 
-export default function GoOutButton({ canGoOut }: GoOutButtonProps) {
+export default function GoOutButton({ canGoOut, onGoOut }: GoOutButtonProps) {
   const [confirming, setConfirming] = useState(false)
   const goOut = useGameStore((s) => s.goOut)
 
@@ -28,6 +29,7 @@ export default function GoOutButton({ canGoOut }: GoOutButtonProps) {
       setConfirming(true)
     } else {
       goOut()
+      onGoOut?.()
       setConfirming(false)
     }
   }

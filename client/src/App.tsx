@@ -5,6 +5,7 @@ import HomeScreen from './screens/HomeScreen'
 import LobbyScreen from './screens/LobbyScreen'
 import GameScreen from './screens/GameScreen'
 import Toast from './components/Toast'
+import PhaseOverlay from './components/PhaseOverlay'
 
 export default function App() {
   const screen = useUiStore((s) => s.screen)
@@ -14,6 +15,7 @@ export default function App() {
 
   return (
     <div className="min-h-dvh bg-gray-950 text-white">
+      <PhaseOverlay />
       {error && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white text-sm font-medium px-4 py-3 text-center">
           {error}

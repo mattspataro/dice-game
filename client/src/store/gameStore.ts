@@ -10,6 +10,8 @@ interface GameState {
   myPlayerId: string | null
   room: Room | null
   chatMessages: ChatMessage[]
+  lastRollEvent: RollEvent | null
+  winnerId: string | null
   // actions
   createRoom: (displayName: string) => void
   joinRoom: (code: string, displayName: string) => void
@@ -19,15 +21,18 @@ interface GameState {
   sendChat: (text: string, type: 'message' | 'emoji') => void
 }
 
-export const useGameStore = create<GameState>((set) => {
+export const useGameStore = create<GameState>((set, get) => {
   // ── socket listeners ────────────────────────────────────────────────────
 
   socket.on('connect', () => {
+    const hadRoom = !!get().room
     set({ connected: true, myPlayerId: socket.id })
+    if (hadRoom) useUiStore.getState().addToast('Reconnected!')
   })
 
   socket.on('disconnect', () => {
     set({ connected: false })
+    useUiStore.getState().addToast('Connection lost — reconnecting...')
   })
 
   socket.on('room_state', (room: Room) => {
@@ -72,8 +77,18 @@ export const useGameStore = create<GameState>((set) => {
         lastRoll: event.result,
         rollHistory: [...s.room.rollHistory, event],
       }
-      return { room: updatedRoom }
+      return { room: updatedRoom, lastRollEvent: event }
     })
+
+    // haptics
+    if (event.result === KILL_NUMBER) {
+      navigator.vibrate?.([100, 50, 200])
+    } else {
+      navigator.vibrate?.(100)
+    }
+
+    // roll result overlay
+    useUiStore.getState().setRollResult(event.result, event.result === KILL_NUMBER)
 
     // manage rolling/go-out window UI state
     const ui = useUiStore.getState()
@@ -98,7 +113,7 @@ export const useGameStore = create<GameState>((set) => {
         },
       }
     })
-    useUiStore.getState().addToast(`${displayName} went out!`)
+    useUiStore.getState().addToast(`${displayName} went out! (${lockedScore} pts)`)
     useUiStore.getState().setGoOutWindow(false)
   })
 
@@ -134,6 +149,9 @@ export const useGameStore = create<GameState>((set) => {
         },
       }
     })
+    // Show phase transition overlay for the NEXT phase (phase+1 is starting)
+    const nextPhase = phase + 1
+    useUiStore.getState().showPhaseOverlay(nextPhase)
   })
 
   socket.on('game_ended', ({ finalScores, winnerId }) => {
@@ -143,14 +161,15 @@ export const useGameStore = create<GameState>((set) => {
         room: {
           ...s.room,
           status: 'finished',
-          hostId: winnerId,
           players: s.room.players.map((p) => ({
             ...p,
             totalScore: finalScores[p.id] ?? p.totalScore,
           })),
         },
+        winnerId,
       }
     })
+    useUiStore.getState().triggerConfetti()
   })
 
   socket.on('turn_changed', ({ turnIndex }) => {
@@ -163,6 +182,10 @@ export const useGameStore = create<GameState>((set) => {
   socket.on('host_changed', (newHostId: string) => {
     set((s) => {
       if (!s.room) return s
+      const newHost = s.room.players.find((p) => p.id === newHostId)
+      if (newHost) {
+        useUiStore.getState().addToast(`${newHost.displayName} is now the host`)
+      }
       return { room: { ...s.room, hostId: newHostId } }
     })
   })
@@ -186,6 +209,8 @@ export const useGameStore = create<GameState>((set) => {
     myPlayerId: null,
     room: null,
     chatMessages: [],
+    lastRollEvent: null,
+    winnerId: null,
 
     createRoom: (displayName) => {
       socket.emit('create_room', displayName)

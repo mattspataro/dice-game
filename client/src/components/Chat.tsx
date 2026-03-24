@@ -76,6 +76,23 @@ export default function Chat() {
             <div ref={bottomRef} />
           </div>
 
+          {/* Emoji quick-bar */}
+          <div className="flex gap-3 px-4 py-2 border-t border-gray-800">
+            {['🔥', '💀', '👏', '😭'].map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => {
+                  sendChat(emoji, 'emoji')
+                  isUserScrolled.current = false
+                }}
+                className="text-xl hover:scale-125 transition-transform active:scale-95"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+
           {/* Input */}
           <form onSubmit={handleSubmit} className="flex gap-2 px-4 py-3 border-t border-gray-800">
             <input
